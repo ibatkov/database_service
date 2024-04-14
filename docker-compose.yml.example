@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  postgres:
+    image: "postgres:16.2"
+    ports:
+      - "5432:5432"
+    env_file:
+      - config/postgres/config.env
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+  # Image for migrations apply
+  goose_up:
+    image: "artsafin/goose-migrations:latest"
+    depends_on:
+      - postgres
+    env_file:
+      - config/migration/goose.env
+    volumes:
+      - ./migrations:/migrations
+    command: [ "up" ]
