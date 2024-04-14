@@ -30,7 +30,10 @@ func (api *Api) Init() {
 }
 
 func NewApi() (api Api, err error) {
-
+	api.config, err = config.ReadConfig()
+	if err != nil {
+		return
+	}
 	api.Init()
 
 	return api, nil
