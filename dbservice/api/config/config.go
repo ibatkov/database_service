@@ -1,27 +1,32 @@
 package config
 
 import (
+	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 )
 
-type Config struct {
+type Values struct {
 	Cache struct {
 		TTl int `yaml:"ttl"`
 	} `yaml:"cache"`
 	DB struct {
 		Host     string `yaml:"host"`
-		Port     int    `yaml:"port"`
+		Port     string `yaml:"port"`
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
 		Database string `yaml:"database"`
 	} `yaml:"db"`
 }
 
+func (cfg Values) GetDSN() string {
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", cfg.DB.Host, cfg.DB.Port, cfg.DB.Username, cfg.DB.Password, cfg.DB.Database)
+}
+
 const DefaultConfigPath = "./config/database-service/config.yml"
 
-func ReadConfig() (config *Config, err error) {
+func ReadConfig() (config *Values, err error) {
 	path := os.Getenv("CONFIG_PATH")
 	if path == "" {
 		path = DefaultConfigPath

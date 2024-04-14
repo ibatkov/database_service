@@ -1,14 +1,19 @@
 package api
 
 import (
+	"context"
 	"database-service/dbservice/api/config"
+	"database/sql"
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 	"net/http"
+	"time"
 )
 
 type Api struct {
-	config *config.Config
+	config *config.Values
 	router *gin.Engine
+	db     *sql.DB
 }
 
 func (api *Api) Run() {
@@ -34,8 +39,34 @@ func NewApi() (api Api, err error) {
 	if err != nil {
 		return
 	}
+
+	api.db, err = NewDB(api.config)
+	if err != nil {
+		return
+	}
+
 	api.Init()
 
 	return api, nil
 
+}
+
+func NewDB(config *config.Values) (*sql.DB, error) {
+	db, err := sql.Open("postgres", config.GetDSN())
+	if err != nil {
+		return nil, err
+	}
+	timeout, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelFunc()
+
+	err = db.PingContext(timeout)
+	if err != nil {
+		return nil, err
+	}
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
