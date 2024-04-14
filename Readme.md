@@ -59,3 +59,14 @@
 | Id      | PK, BIGSERIAL  |    Первичный ключ     |
 | user_id | FK к __users__ | Связь с пользователем |
 | data    |      TEXT      |  Данные пользователя  |
+
+## Api
+
+[Спецификация](api-specification.yaml)
+
+## Описание приложения
+
+### Конфигурация
+
+#### CONFIG_PATH
+Путь до конфига внутри приложения. По умолчанию "./config/database-service/config.yaml".
