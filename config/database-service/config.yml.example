@@ -1,0 +1,9 @@
+jwt_code_phrase: "example-phrase"
+cache:
+  ttl: 10
+db:
+  host: "localhost"
+  port: "5432"
+  username: "database-service"
+  password: "password"
+  database: "users_data"

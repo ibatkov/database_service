@@ -8,7 +8,8 @@ import (
 )
 
 type Values struct {
-	Cache struct {
+	JwtCodePhrase string `yaml:"jwt_code_phrase"`
+	Cache         struct {
 		TTl int `yaml:"ttl"`
 	} `yaml:"cache"`
 	DB struct {

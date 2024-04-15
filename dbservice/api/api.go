@@ -3,10 +3,12 @@ package api
 import (
 	"context"
 	"database-service/dbservice/api/config"
+	"database-service/dbservice/api/controller"
+	"database-service/dbservice/api/logger"
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
-	"net/http"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -14,6 +16,7 @@ type Api struct {
 	config *config.Values
 	router *gin.Engine
 	db     *sql.DB
+	logger logger.Logger
 }
 
 func (api *Api) Run() {
@@ -23,15 +26,11 @@ func (api *Api) Run() {
 	}
 }
 
-func (api *Api) Init() {
+func (api *Api) InitRoutes() {
 	api.router = gin.New()
 
-	api.router.GET("/data",
-		func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "data"})
-		},
-	)
-
+	dataController := controller.BuildDataController(api.logger, api.db, api.config)
+	dataController.AddRoutes(api.router)
 }
 
 func NewApi() (api Api, err error) {
@@ -40,12 +39,19 @@ func NewApi() (api Api, err error) {
 		return
 	}
 
-	api.db, err = NewDB(api.config)
+	l, err := zap.NewProduction()
 	if err != nil {
 		return
 	}
+	api.logger = l.Sugar()
 
-	api.Init()
+	api.db, err = NewDB(api.config)
+	if err != nil {
+		api.logger.Error(err)
+		return
+	}
+
+	api.InitRoutes()
 
 	return api, nil
 
