@@ -1,29 +1,36 @@
-swagger: "2.0"
+openapi: 3.0.3
 info:
   title: Title
   description: Title
   version: 1.0.0
-host: www.localhost:8080
-schemes:
-  - http
+servers:
+  - url: 'http://localhost:8080'
 paths:
   /data:
     get:
-      description: Returns users data if called by user. Returns all data if called by admin
-      security:
-        - Bearer: [ ]
-      responses:
-        200:
-          description: New response
+      summary: 'Get data'
+      description: 'Get data based on user access level'
+      operationId: 'get-data'
+      parameters:
+        - in: 'header'
+          name: 'Authorization'
+          required: true
           schema:
-            type: object
-            properties:
-              message:
-                type: string
-        500:
-          description: when db goes wrong
-securityDefinitions:
-  Bearer:
-    type: apiKey
-    name: Authorization
-    in: header
+            type: 'string'
+          description: 'Authorization'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            application/json:
+              schema:
+                type: 'array'
+                items:
+                  type: 'object'
+                  properties:
+                    id:
+                      type: 'integer'
+                    user_id:
+                      type: 'integer'
+                    data:
+                      type: 'string'
