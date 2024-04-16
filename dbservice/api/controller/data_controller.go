@@ -3,6 +3,7 @@ package controller
 import (
 	"database-service/auth"
 	"database-service/dbservice/api/logger"
+	"database-service/dbservice/api/response"
 	"database-service/dbservice/api/services"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -15,14 +16,14 @@ type DataController struct {
 }
 
 func (controller *DataController) AddRoutes(router gin.IRoutes) {
-	router.GET("/data", controller.getData)
+	router.GET("/data", controller.GetDataHandler)
 }
 
 func NewDataController(authService auth.Service, service services.Data, logger logger.Logger) *DataController {
 	return &DataController{authService: authService, service: service, logger: logger}
 }
 
-type Response struct {
+type ResponseBody struct {
 	Data []Data `json:"data"`
 }
 
@@ -32,31 +33,46 @@ type Data struct {
 	Data   string `json:"data"`
 }
 
-func (controller *DataController) getData(ctx *gin.Context) {
-	claims, err := controller.authService.GetClaims(ctx.GetHeader("Authorization"))
+func (controller *DataController) GetDataHandler(ctx *gin.Context) {
+	resp := controller.GetData(ctx.GetHeader("Authorization"))
+	if resp.Body == nil {
+		ctx.Status(resp.Status)
+	}
+	ctx.JSON(resp.Status, resp.Body)
+}
+
+func (controller *DataController) GetData(bearerToken string) response.Response {
+	claims, err := controller.authService.GetClaims(bearerToken)
 	if err != nil {
 		controller.logger.Error(err)
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
+		return response.Response{
+			Status: http.StatusUnauthorized,
+			Body:   gin.H{"error": err.Error()},
+		}
 	}
 
 	data, err := controller.service.GetDataByAccessLevel(claims.UserID)
 	if err != nil {
 		controller.logger.Error(err)
-		ctx.JSON(http.StatusInternalServerError, nil)
-		return
+		return response.Response{
+			Status: http.StatusInternalServerError,
+			Body:   nil,
+		}
 	}
 
-	var response Response
+	var body ResponseBody
 
-	response.Data = make([]Data, 0)
+	body.Data = make([]Data, 0)
 	for _, item := range data {
-		response.Data = append(response.Data, Data{
+		body.Data = append(body.Data, Data{
 			Id:     item.GetId(),
 			UserId: item.GetUserId(),
 			Data:   item.GetData(),
 		})
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	return response.Response{
+		Status: http.StatusOK,
+		Body:   body,
+	}
 }
