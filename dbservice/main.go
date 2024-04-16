@@ -1,7 +1,7 @@
 package main
 
 import (
-	api "database-service/dbservice/api"
+	"database-service/dbservice/api"
 )
 
 func main() {

@@ -2,11 +2,8 @@ package controller
 
 import (
 	"database-service/auth"
-	"database-service/dbservice/api/config"
 	"database-service/dbservice/api/logger"
 	"database-service/dbservice/api/services"
-	"database-service/domain"
-	"database/sql"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -23,17 +20,6 @@ func (controller *DataController) AddRoutes(router gin.IRoutes) {
 
 func NewDataController(authService auth.Service, service services.Data, logger logger.Logger) *DataController {
 	return &DataController{authService: authService, service: service, logger: logger}
-}
-
-func BuildDataController(logger logger.Logger, db *sql.DB, cfg *config.Values) *DataController {
-	return NewDataController(
-		auth.NewJwtService(cfg.JwtCodePhrase),
-		services.NewDataService(
-			domain.NewDataRepository(db), domain.NewUserRepository(db),
-		),
-		logger,
-	)
-
 }
 
 type Response struct {

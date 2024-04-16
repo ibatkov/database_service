@@ -1,0 +1,1 @@
+user database-service on +@all -DEBUG ~* >password
