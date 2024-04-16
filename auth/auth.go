@@ -40,7 +40,7 @@ func (service JwtService) GetClaims(token string) (claims *TokenClaims, err erro
 		return []byte(service.codePhrase), nil
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	// Validate the token and return the claims.
