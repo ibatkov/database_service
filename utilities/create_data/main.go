@@ -43,11 +43,19 @@ func main() {
 					log.Fatal(err)
 				}
 
+				dataQuery := `INSERT INTO data (user_id, data) VALUES `
+				dataValues := []interface{}{}
+
 				for j := 0; j < *dataFlag; j++ {
-					_, err := db.Exec(`INSERT INTO data (user_id, data) VALUES ($1, $2)`, userId, Data)
-					if err != nil {
-						log.Fatal(err)
-					}
+					dataQuery += fmt.Sprintf("($%d, $%d),", j*2+1, j*2+2)
+					dataValues = append(dataValues, userId, Data)
+				}
+
+				dataQuery = dataQuery[:len(dataQuery)-1] // Remove the trailing comma
+
+				_, err = db.Exec(dataQuery, dataValues...)
+				if err != nil {
+					log.Fatal(err)
 				}
 				bar.Add(1)
 			}
