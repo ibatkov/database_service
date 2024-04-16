@@ -19,3 +19,17 @@ services:
     volumes:
       - ./migrations:/migrations
     command: [ "up" ]
+  application:
+    build:
+      context: .
+      dockerfile: ./dbservice/Dockerfile
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./config/database-service:/etc/opt/database-service
+    environment:
+      - CONFIG_PATH=/etc/opt/database-service/config.yml
+    command: ["./main"]
+    ports:
+      - "8080:8080"
