@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	sqlQueryDataByUser  = "SELECT * FROM data WHERE user_id = $1"
-	sqlQueryDataByAdmin = "SELECT * FROM data"
+	sqlQueryDataByUser  = "SELECT * FROM data WHERE user_id = $1 order by id"
+	sqlQueryDataByAdmin = "SELECT * FROM data order by id"
 )
 
 type Data interface {
@@ -179,4 +179,28 @@ func (repo *CachedDataRepository) setToCache(userId int, data []Data) error {
 
 func (repo *CachedDataRepository) getKey(userId int) string {
 	return fmt.Sprintf(keyFormat, repo.keyPrefix, userId)
+}
+
+type DataRepositoryStub struct {
+	GetDataByUserStub  func(userId int) ([]Data, error)
+	GetDataByAdminStub func() ([]Data, error)
+	RealAdapter        IDataRepository
+}
+
+func (stub DataRepositoryStub) GetDataByUser(userId int) ([]Data, error) {
+	if stub.GetDataByUserStub != nil {
+		return stub.GetDataByUserStub(userId)
+	} else if stub.RealAdapter != nil {
+		return stub.RealAdapter.GetDataByUser(userId)
+	}
+	panic("neither stub nor RealAdapter is set for GetDataByUser")
+}
+
+func (stub DataRepositoryStub) GetDataByAdmin() ([]Data, error) {
+	if stub.GetDataByAdminStub != nil {
+		return stub.GetDataByAdminStub()
+	} else if stub.RealAdapter != nil {
+		return stub.RealAdapter.GetDataByAdmin()
+	}
+	panic("neither stub nor RealAdapter is set for GetDataByAdmin")
 }

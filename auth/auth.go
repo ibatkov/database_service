@@ -70,3 +70,18 @@ func (service JwtService) GenerateToken(userID int) (string, error) {
 
 	return tokenString, nil
 }
+
+type ServiceStub struct {
+	GetClaimsStub func(token string) (claims *TokenClaims, err error)
+	RealService   Service
+}
+
+func (s ServiceStub) GetClaims(token string) (*TokenClaims, error) {
+	if s.GetClaimsStub != nil {
+		return s.GetClaimsStub(token)
+	}
+	if s.RealService != nil {
+		return s.RealService.GetClaims(token)
+	}
+	panic("both GetClaimsStub or real service are not set")
+}

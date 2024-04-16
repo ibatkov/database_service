@@ -22,3 +22,18 @@ func (repo UserRepository) IsAdmin(userId int) bool {
 	_ = row.Scan(&isAdmin)
 	return isAdmin
 }
+
+type UserRepositoryStub struct {
+	IsAdminStub func(userId int) bool
+	RealAdapter IUserRepository
+}
+
+func (stub UserRepositoryStub) IsAdmin(userId int) bool {
+	if stub.IsAdminStub != nil {
+		return stub.IsAdminStub(userId)
+	}
+	if stub.RealAdapter != nil {
+		return stub.RealAdapter.IsAdmin(userId)
+	}
+	panic("neither IsAdminStub nor RealAdapter are assigned")
+}

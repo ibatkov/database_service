@@ -13,7 +13,7 @@ type DataService struct {
 	usersRepo domain.IUserRepository
 }
 
-func NewDataService(dataRepo domain.IDataRepository, usersRepo domain.IUserRepository) *DataService {
+func NewDataService(dataRepo domain.IDataRepository, usersRepo domain.IUserRepository) Data {
 	return &DataService{
 		dataRepo:  dataRepo,
 		usersRepo: usersRepo,
@@ -30,10 +30,10 @@ func (service *DataService) GetDataByAccessLevel(userId int) ([]domain.Data, err
 
 type FakeDataService struct {
 	GetDataByAccessLevelStub func(userId int) ([]domain.Data, error)
-	Service                  *DataService
+	Service                  Data
 }
 
-func (service *FakeDataService) GetDataByAccessLevel(userId int) ([]domain.Data, error) {
+func (service FakeDataService) GetDataByAccessLevel(userId int) ([]domain.Data, error) {
 	if service.GetDataByAccessLevelStub != nil {
 		return service.GetDataByAccessLevelStub(userId)
 	}
