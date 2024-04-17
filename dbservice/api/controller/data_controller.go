@@ -11,7 +11,7 @@ import (
 
 type DataController struct {
 	logger      logger.Logger
-	service     services.Data
+	dataService services.Data
 	authService auth.Service
 }
 
@@ -19,8 +19,8 @@ func (controller *DataController) AddRoutes(router gin.IRoutes) {
 	router.GET("/data", controller.GetDataHandler)
 }
 
-func NewDataController(authService auth.Service, service services.Data, logger logger.Logger) *DataController {
-	return &DataController{authService: authService, service: service, logger: logger}
+func NewDataController(authService auth.Service, dataService services.Data, logger logger.Logger) *DataController {
+	return &DataController{authService: authService, dataService: dataService, logger: logger}
 }
 
 type ResponseBody struct {
@@ -51,7 +51,7 @@ func (controller *DataController) GetData(bearerToken string) response.Response 
 		}
 	}
 
-	data, err := controller.service.GetDataByAccessLevel(claims.UserID)
+	data, err := controller.dataService.GetDataByAccessLevel(claims.UserID)
 	if err != nil {
 		controller.logger.Error(err)
 		return response.Response{
