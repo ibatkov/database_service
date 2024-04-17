@@ -22,7 +22,7 @@ const Data = `Lorem Ipsum is simply dummy text of the printing and typesetting i
 func main() {
 	flag.Parse()
 
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=database-service password=password dbname=users_data sslmode=disable")
+	db, err := sql.Open("postgres", "host=postgres port=5432 user=database-service password=password dbname=users_data sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -19,6 +19,22 @@ services:
     volumes:
       - ./migrations:/migrations
     command: [ "up" ]
+  redis:
+    image: redis:7.2.4
+    ports:
+      - "6379:6379"
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf
+  prometheus:
+    image: prom/prometheus:v2.21.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/:/etc/prometheus/
+    command:
+      - --web.enable-lifecycle
+      - --config.file=/etc/prometheus/prometheus.yml
   application:
     build:
       context: .
@@ -40,3 +56,22 @@ services:
     volumes:
       - ./:/app
     command: ["go", "test", "./..."]
+
+#  create_data:
+#    build:
+#      context: .
+#      dockerfile: ./utilities/create_data/Dockerfile
+#    depends_on:
+#      - application
+#    command: [ "./create_data", "-users=500000", "-data=20", "-workers=6" ]
+
+#  load_generator:
+#    build:
+#      context: .
+#      dockerfile: ./utilities/load_generator/Dockerfile
+#    depends_on:
+#      - application
+#    environment:
+#      - HOST=http://application:8080
+#    command: ["./load_generator", "-rps=600", "-host=http://application:8080"]
+#    restart: always
