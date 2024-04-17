@@ -1,36 +1,67 @@
-openapi: 3.0.3
+openapi: 3.1.0
+x-stoplight:
+  id: ozrrd2sf3xj57
 info:
-  title: Title
-  description: Title
-  version: 1.0.0
+  title: api-specification
+  version: '1.0'
 servers:
   - url: 'http://localhost:8080'
 paths:
   /data:
     get:
-      summary: 'Get data'
-      description: 'Get data based on user access level'
-      operationId: 'get-data'
-      parameters:
-        - in: 'header'
-          name: 'Authorization'
-          required: true
-          schema:
-            type: 'string'
-          description: 'Authorization'
+      summary: ''
+      operationId: get-data
       responses:
         '200':
-          description: 'Success'
+          description: OK
           content:
             application/json:
               schema:
-                type: 'array'
-                items:
-                  type: 'object'
-                  properties:
-                    id:
-                      type: 'integer'
-                    user_id:
-                      type: 'integer'
-                    data:
-                      type: 'string'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    description: 'Массив возвращаемых обьектов. Пустой, если обьектов нет'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Идентификатор данных
+                        user_id:
+                          type: integer
+                          description: Идентификатор пользователя данных
+                        data:
+                          type: string
+                          description: Данные пользователя
+                      required:
+                        - id
+                        - user_id
+                        - data
+                required:
+                  - data
+        '401':
+          description: Unauthorized
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: сообщение об ошибке
+                required:
+                  - error
+        '500':
+          description: Internal Server Error
+      description: |-
+        Return data, depends on which access level requested user has. 
+        If admin, returns all data of users; users data id not
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: Authorization
+          description: Bearer JWT-токен авторизации
+          required: true
