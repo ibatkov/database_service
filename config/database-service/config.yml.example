@@ -3,13 +3,13 @@ cache:
   ttl: 1000
   key_prefix: "database-service"
 db:
-  host: "localhost"
+  host: "postgres"
   port: "5432"
   username: "database-service"
   password: "password"
   database: "users_data"
 redis:
-  addr: "localhost:6379"
+  addr: "redis:6379"
   db: 0
   username: "database-service"
   password: "password"
