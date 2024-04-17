@@ -33,3 +33,10 @@ services:
     command: ["./main"]
     ports:
       - "8080:8080"
+  run_tests:
+    build:
+      context: .
+      dockerfile: ./dbservice/Dockerfile_tests
+    volumes:
+      - ./:/app
+    command: ["go", "test", "./..."]
