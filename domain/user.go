@@ -1,26 +1,33 @@
 package domain
 
 import (
+	"database-service/dbservice/api/logger"
 	"database/sql"
 )
+
+const AdminUserLevel = "admin"
 
 type IUserRepository interface {
 	IsAdmin(userId int) bool
 }
 
 type UserRepository struct {
-	db *sql.DB
+	db     *sql.DB
+	logger logger.Logger
 }
 
-func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *sql.DB, logger logger.Logger) IUserRepository {
+	return &UserRepository{db: db, logger: logger}
 }
 
 func (repo UserRepository) IsAdmin(userId int) bool {
-	row := repo.db.QueryRow(`SELECT access_level FROM users WHERE id = ?`, userId)
-	var isAdmin bool
-	_ = row.Scan(&isAdmin)
-	return isAdmin
+	row := repo.db.QueryRow(`SELECT access_level FROM users WHERE id = $1`, userId)
+	var accessLevel string
+	err := row.Scan(&accessLevel)
+	if err != nil {
+		repo.logger.Error(err)
+	}
+	return accessLevel == AdminUserLevel
 }
 
 type UserRepositoryStub struct {

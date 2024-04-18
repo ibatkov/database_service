@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	cachepkg "github.com/go-redis/cache/v9"
+	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -121,7 +122,7 @@ func (suite *Suite) reload() {
 
 	suite.usersRepoStub = domain.UserRepositoryStub{
 		IsAdminStub: nil,
-		RealAdapter: domain.NewUserRepository(suite.db),
+		RealAdapter: domain.NewUserRepository(suite.db, suite.loggerStub),
 	}
 
 	suite.authServiceStub = auth.ServiceStub{
@@ -322,7 +323,7 @@ func (suite *Suite) Test_GetData_ByUser_FromDb_SetToCache() {
 	assert.Contains(suite.T(), string(body), fmt.Sprintf(`"data":"%s"`, cachedData[0].Data))
 }
 
-func (suite *Suite) Test_GetData_ByAdmin_FromDb_SetToCache() {
+func (suite *Suite) Test_GetData_ByStubAdmin_FromDb_SetToCache() {
 
 	suite.usersRepoStub.IsAdminStub = func(userId int) bool {
 		return true
@@ -348,4 +349,65 @@ func (suite *Suite) Test_GetData_ByAdmin_FromDb_SetToCache() {
 		assert.Contains(suite.T(), string(body), fmt.Sprintf(`"user_id":%d`, cachedData[0].UserId))
 		assert.Contains(suite.T(), string(body), fmt.Sprintf(`"data":"%s"`, cachedData[0].Data))
 	}
+}
+
+func (suite *Suite) Test_GetData_ByRealAdmin_FromDb_SetToCache() {
+	suite.user.AccessLevel = "admin"
+	suite.afterExecDynamic = func() {
+		suite.CreateUserWithData(2, "message_2")
+		suite.CreateUserWithData(3, "message_3")
+	}
+
+	suite.loggerStub.ErrorStub = func(args ...interface{}) {
+		err := args[0].(error)
+		assert.Error(suite.T(), err)
+	}
+	response := suite.build().GetData(suite.getToken())
+
+	body, _ := json.Marshal(response.Body)
+	assert.Equal(suite.T(), http.StatusOK, response.Status)
+
+	for i := 1; i <= 3; i++ {
+		r := suite.redis.Get(context.Background(), "cache_"+strconv.Itoa(i))
+		b, _ := r.Bytes()
+		var cachedData []domain.CacheData
+		_ = suite.cache.Unmarshal(b, &cachedData)
+
+		assert.Contains(suite.T(), string(body), fmt.Sprintf(`"id":%d`, cachedData[0].Id))
+		assert.Contains(suite.T(), string(body), fmt.Sprintf(`"user_id":%d`, cachedData[0].UserId))
+		assert.Contains(suite.T(), string(body), fmt.Sprintf(`"data":"%s"`, cachedData[0].Data))
+	}
+
+}
+
+func (suite *Suite) Test_GetData_ByRealAdmin_FromDb_Error() {
+	suite.user.AccessLevel = "admin"
+	suite.afterExecDynamic = func() {
+		suite.CreateUserWithData(2, "message_2")
+		suite.CreateUserWithData(3, "message_3")
+	}
+
+	suite.afterExecDynamic = func() {
+		// Роняем миграции, чтобы запрос не прошел
+		if err := goose.SetDialect("postgres"); err != nil {
+			panic(err)
+		}
+		for _ = range 3 {
+			if err := goose.Down(suite.db, "../../migrations"); err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	suite.loggerStub.ErrorStub = func(args ...interface{}) {
+		err := args[0].(error)
+		assert.Error(suite.T(), err)
+	}
+	response := suite.build().GetData(suite.getToken())
+	if err := goose.Up(suite.db, "../../migrations"); err != nil {
+		panic(err)
+	}
+
+	assert.Equal(suite.T(), http.StatusInternalServerError, response.Status)
+
 }

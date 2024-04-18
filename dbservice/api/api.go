@@ -107,7 +107,7 @@ func (api *Api) InitRoutes() {
 	cacheAdapter := cache.NewCacheAdapter(api.config.GetCacheTTL(), cacheClient)
 	dbDataRepo := domain.NewDbDataRepository(api.db)
 	cachedRepo := domain.NewCachedDataRepository(dbDataRepo, cacheAdapter, api.config.Cache.KeyPrefix)
-	usersRepo := domain.NewUserRepository(api.db)
+	usersRepo := domain.NewUserRepository(api.db, api.logger)
 	authService := auth.NewJwtService(api.config.JwtCodePhrase)
 	dataService := services.NewDataService(cachedRepo, usersRepo)
 
